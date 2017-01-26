@@ -130,7 +130,14 @@ class CrashAggregateViewTest extends FlatSpec with Matchers with BeforeAndAfterA
           "payload" ->
             ("crashDate" -> dimensions("activity_date").asInstanceOf[String].substring(0, 10)) ~
             ("processType" -> "main")))
-
+      val histograms = (
+        "STARTUP_CRASH_DETECTED" ->
+          ("bucket_count" -> 3 ) ~
+          ("histogram_type" -> 4) ~
+          ("range" -> List(1, 2)) ~
+          ("sum" -> SCALAR_VALUE) ~
+          ("values" -> Map("0" -> SCALAR_VALUE, "1" -> 0))
+        )
 
       implicit val formats = DefaultFormats
 
@@ -140,6 +147,7 @@ class CrashAggregateViewTest extends FlatSpec with Matchers with BeforeAndAfterA
         "geoCountry" -> dimensions("country").asInstanceOf[String],
         "normalizedChannel" -> dimensions("channel").asInstanceOf[String],
         "appName" -> dimensions("application").asInstanceOf[String],
+        "payload.histograms" -> compact(render(histograms)),
         "payload.keyedHistograms" -> compact(render(keyedHistograms)),
         "payload.info" -> compact(render(info)),
         "payload" -> parse(payload),
@@ -237,6 +245,7 @@ class CrashAggregateViewTest extends FlatSpec with Matchers with BeforeAndAfterA
         assert(stats("gmplugin_crashes")                 == 42 * 2)
         assert(stats("content_shutdown_crashes")         == 42 * 2)
         assert(stats("gpu_crashes")                      == 42 * 2)
+        assert(stats("startup_crashes")                  == 42 * 2)
         assert(stats("usage_hours_squared")              == scala.math.pow(42 / 3600.0, 2))
         assert(stats("main_crashes_squared")             == scala.math.pow(1, 2))
         assert(stats("content_crashes_squared")          == scala.math.pow(42, 2) * 2)
@@ -253,6 +262,7 @@ class CrashAggregateViewTest extends FlatSpec with Matchers with BeforeAndAfterA
         assert(stats("gmplugin_crashes")                 == 42 * 2 * 2)
         assert(stats("content_shutdown_crashes")         == 42 * 2 * 2)
         assert(stats("gpu_crashes")                      == 42 * 2 * 2)
+        assert(stats("startup_crashes")                  == 42 * 2 * 2)
         assert(stats("usage_hours_squared")              == scala.math.pow(42 / 3600.0, 2) * 2)
         assert(stats("main_crashes_squared")             == scala.math.pow(1, 2) * 2)
         assert(stats("content_crashes_squared")          == scala.math.pow(42, 2) * 2 * 2)
