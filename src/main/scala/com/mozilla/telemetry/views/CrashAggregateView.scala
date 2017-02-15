@@ -241,11 +241,6 @@ object CrashAggregateView {
       case _ => JObject()
     }
 
-    val histograms = pingFields.get("payload.histograms") match {
-      case Some(value: String) => parse(value)
-      case _ => JObject()
-    }
-
     // obtain the relevant stats for the ping
     val isMainPing = pingFields.get("docType") match {
       case Some("main") => true
@@ -348,7 +343,19 @@ object CrashAggregateView {
     val pluginCrashes: Double = getCountHistogramValue(keyedHistograms \ "SUBPROCESS_CRASHES_WITH_DUMP" \ "plugin")
     val geckoMediaPluginCrashes: Double = getCountHistogramValue(keyedHistograms \ "SUBPROCESS_CRASHES_WITH_DUMP" \ "gmplugin")
     val contentShutdownCrashes: Double = getCountHistogramValue(keyedHistograms \ "SUBPROCESS_KILL_HARD" \ "ShutDownKill")
-    val startupCrash: Double = getFlagHistogramValue(histograms \ "STARTUP_CRASH_DETECTED")
+
+    val startupCrash: Double = if (isMainPing) 0 else {
+      val payload = pingFields.get("payload") match {
+        case Some(value: JValue) => value
+        case _ => JNothing
+      }
+
+      payload \ "payload" \ "metadata" \ "StartupCrash"  match {
+        case JBool(value) if value => 1
+        case _ => 0
+      }
+    }
+
 
     val stats = List(
       if (isMainPing) 1 else 0, // number of pings represented by the aggregate

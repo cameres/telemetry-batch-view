@@ -129,7 +129,9 @@ class CrashAggregateViewTest extends FlatSpec with Matchers with BeforeAndAfterA
       val payload = if (isMain) "{}" else compact(render(
           "payload" ->
             ("crashDate" -> dimensions("activity_date").asInstanceOf[String].substring(0, 10)) ~
-            ("processType" -> "main")))
+            ("processType" -> "main") ~
+              ("metadata" -> (
+                "StartupCrash" -> true))))
       val histograms = (
         "STARTUP_CRASH_DETECTED" ->
           ("bucket_count" -> 3 ) ~
